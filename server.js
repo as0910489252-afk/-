@@ -12,7 +12,7 @@ app.use(express.static("public"));
 const rooms = new Map();
 const TEAM_NAMES = ["爆笑隊", "幸運隊", "吃貨隊", "摸魚隊", "冠軍隊"];
 const QUESTIONS = [
-  { q: "尾牙現場最強的超能力是？", options: ["秒回主管訊息", "抽獎時心跳停止", "吃完還能再吃", "以上皆是"], answer: 3, points: 100 },
+  { q: "七里香誰唱的？", options: ["周杰倫", "周傳雄", "周華健", "以上皆是"], answer: 3, points: 100 },
   { q: "聽到「今年大家辛苦了」，下一秒最期待？", options: ["加薪通知", "年終獎金", "抽到大獎", "三個都要"], answer: 3, points: 100 },
   { q: "公司團隊合作的最佳狀態是？", options: ["互相支援", "一起解決問題", "一起領獎", "全部都對"], answer: 3, points: 100 },
   { q: "尾牙抽獎前最合理的儀式是？", options: ["握緊手機", "默念幸運數字", "先跟宇宙溝通", "全部都做"], answer: 3, points: 100 },
