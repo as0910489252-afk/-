@@ -99,7 +99,7 @@ socket.on("state",s=>{
     $("hostMessage").textContent=s.message;
     $("playerList").innerHTML="";
     s.participants.forEach(p=>{const c=document.createElement("span");c.className="playerchip";c.textContent=(p.connected?"🟢 ":"⚪ ")+p.name+" · "+p.team;$("playerList").appendChild(c);});
-    if(s.phase==="question"){show("hostQuestion",true);show("next",true);$("questionNo").textContent=`第 ${s.questionIndex+1} 題 / 5`;renderQuestion(s.question,s.questionIndex,"questionText","hostAnswers",true);}
+    if(s.phase==="question"){show("hostQuestion",true);show("next",true);$("questionNo").textContent=`第 ${s.questionIndex+1} 題 / 10`;renderQuestion(s.question,s.questionIndex,"questionText","hostAnswers",true);}
     else {show("hostQuestion",false);show("next",false);}
     if(s.phase==="results"){$("hostMessage").textContent=`比賽結束！冠軍隊伍：${s.winner||"—"}`;}
     if(s.drawWinner){show("winnerBox",true);$("winnerName").textContent="🎉 "+s.drawWinner.name;$("winnerTeam").textContent=s.drawWinner.team+" · 請上台領獎";}
