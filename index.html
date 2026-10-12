@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>尾牙王者爭霸賽</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+:root{--bg:#140d2b;--panel:#241747;--pink:#ff4fa3;--yellow:#ffd85a;--cyan:#53e8ff;--text:#fff8ff;--muted:#c9bedc}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 15% 0%,#4b1764 0,transparent 35%),radial-gradient(circle at 95% 10%,#143e67 0,transparent 30%),var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;min-height:100vh}
+header{padding:18px 22px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ffffff22;gap:12px}header h1{font-size:clamp(20px,3vw,32px);margin:0}header span{color:var(--yellow);font-weight:900}
+main{max-width:1150px;margin:auto;padding:22px}.hero{text-align:center;padding:22px 0 28px}.eyebrow{color:var(--cyan);font-weight:900;letter-spacing:2px}.hero h2{font-size:clamp(34px,7vw,72px);line-height:1.04;margin:12px 0}.hero p{color:var(--muted);font-size:17px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px}.card{background:#241747dd;border:1px solid #ffffff20;border-radius:22px;padding:22px;box-shadow:0 14px 50px #0003}.card h3{margin-top:0;font-size:23px}.muted{color:var(--muted)}label{display:block;margin:12px 0 6px;color:var(--muted)}input{width:100%;padding:14px;border-radius:12px;border:1px solid #ffffff33;background:#130d25;color:white;font:inherit}
+button{border:0;border-radius:13px;padding:13px 17px;background:linear-gradient(110deg,var(--pink),#ff8b59);color:white;font:inherit;font-weight:900;cursor:pointer;box-shadow:0 7px 20px #ff4fa333}button.secondary{background:#ffffff14;border:1px solid #ffffff30;box-shadow:none}button:disabled{opacity:.45;cursor:not-allowed}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}.code{font-size:clamp(36px,8vw,66px);font-weight:1000;color:var(--yellow);letter-spacing:7px}.pill{display:inline-block;border:1px solid #ffffff28;background:#ffffff0c;border-radius:999px;padding:6px 10px;color:var(--cyan);font-size:13px;font-weight:800}
+.hidden{display:none!important}.notice{padding:12px;border-radius:12px;background:#ffffff10;margin:12px 0;color:var(--muted)}.bigquestion{font-size:clamp(25px,4vw,46px);font-weight:1000;line-height:1.2}.answers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:22px}.answer{min-height:88px;font-size:clamp(16px,2.5vw,25px);text-align:left;border:2px solid #ffffff28}.answer:nth-child(1){background:#e34d8c}.answer:nth-child(2){background:#246ed4}.answer:nth-child(3){background:#159a8c}.answer:nth-child(4){background:#9a53d9}
+.statrow{display:flex;gap:12px;flex-wrap:wrap}.stat{flex:1;min-width:115px;background:#ffffff0b;border-radius:14px;padding:15px}.stat strong{display:block;font-size:28px;color:var(--yellow)}.teams{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}.team{background:#ffffff0b;border-radius:14px;padding:14px}.team strong{display:block;font-size:20px}.bar{height:9px;background:#ffffff14;border-radius:99px;overflow:hidden;margin-top:10px}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--pink),var(--yellow))}.winner{text-align:center;padding:20px;border:2px solid var(--yellow);border-radius:18px;background:#ffd85a12}.winner h2{font-size:clamp(30px,6vw,60px);margin:8px;color:var(--yellow)}.small{font-size:13px;color:var(--muted)}.players{display:flex;gap:7px;flex-wrap:wrap}.playerchip{padding:7px 10px;border-radius:99px;background:#ffffff10;font-size:13px}.error{color:#ff8cae}.success{color:#7bffcf}
+@media(max-width:560px){main{padding:14px}.answers{grid-template-columns:1fr}.card{padding:17px}header{padding:14px}.hero{padding-top:12px}}
+</style></head>
+<body>
+<header><h1>🎉 尾牙王者爭霸賽</h1><span>50 人同樂版</span></header>
+<main>
+<section class="hero"><div class="eyebrow">TEAM UP · PLAY · WIN</div><h2>今晚不只吃飯<br>還要拿冠軍！</h2><p>手機加入、分隊答題、即時積分、幸運抽獎</p></section>
+<div id="mode" class="grid">
+ <div class="card"><span class="pill">🎤 主持人／投影螢幕</span><h3>建立遊戲房間</h3><p class="muted">投影此頁，讓同事掃描 QR Code（可自行用房間連結產生 QR）或輸入房間碼加入。</p><button id="create">建立新房間</button><div id="createError" class="error"></div></div>
+ <div class="card"><span class="pill">📱 玩家手機</span><h3>加入遊戲</h3><label for="roomCode">六位數房間碼</label><input id="roomCode" inputmode="numeric" maxlength="6" placeholder="例如 482731"><label for="playerName">你的暱稱</label><input id="playerName" maxlength="18" placeholder="例如：幸運小隊長"><div class="actions"><button id="join">加入戰局</button></div><div id="joinError" class="error"></div></div>
+</div>
+
+<section id="host" class="hidden">
+ <div class="card">
+  <div class="statrow"><div class="stat"><span class="muted">房間碼</span><strong id="hostCode">------</strong></div><div class="stat"><span class="muted">已加入玩家</span><strong><span id="playerCount">0</span>/50</strong></div><div class="stat"><span class="muted">遊戲狀態</span><strong id="phaseText">等待中</strong></div></div>
+  <p class="muted">把房間碼投影給大家。玩家加入後會自動平均分成 5 隊。</p>
+  <div class="actions"><button id="start">🚀 開始比賽</button><button id="next" class="secondary hidden">下一題 ➜</button><button id="draw">🎁 抽出幸運得主</button><button id="resetDraw" class="secondary">重置抽獎結果</button><button id="fullscreen" class="secondary">⛶ 全螢幕投影</button></div>
+  <div id="hostMessage" class="notice"></div>
+ </div>
+ <div id="hostQuestion" class="card hidden" style="margin-top:16px"><span class="pill" id="questionNo">第 1 題</span><div class="bigquestion" id="questionText"></div><div class="answers" id="hostAnswers"></div><p class="muted">已作答：<strong id="answered">0</strong> / <span id="totalPlayers">0</span></p></div>
+ <div id="winnerBox" class="winner hidden" style="margin-top:16px"><div class="eyebrow">🏆 LUCKY WINNER 🏆</div><h2 id="winnerName">幸運得主</h2><p id="winnerTeam"></p></div>
+ <div class="card" style="margin-top:16px"><h3>🏅 隊伍即時排行榜</h3><div class="teams" id="teamBoard"></div></div>
+ <div class="card" style="margin-top:16px"><h3>👋 已加入玩家</h3><div id="playerList" class="players"></div></div>
+</section>
+
+<section id="player" class="hidden">
+ <div class="card"><span class="pill">你的參賽資訊</span><div class="statrow" style="margin-top:12px"><div class="stat"><span class="muted">暱稱</span><strong id="myName">玩家</strong></div><div class="stat"><span class="muted">所屬隊伍</span><strong id="myTeam">隊伍</strong></div><div class="stat"><span class="muted">個人積分</span><strong id="myScore">0</strong></div></div><div class="notice" id="playerMessage">等待主持人開始遊戲…</div></div>
+ <div id="playerQuestion" class="card hidden" style="margin-top:16px"><span class="pill" id="playerQuestionNo">第 1 題</span><div class="bigquestion" id="playerQuestionText"></div><div class="answers" id="playerAnswers"></div><div id="answerFeedback" class="notice hidden"></div></div>
+ <div class="card" style="margin-top:16px"><h3>隊伍排名</h3><div class="teams" id="playerTeamBoard"></div></div>
+ <div id="playerWinner" class="winner hidden" style="margin-top:16px"><div class="eyebrow">🎉 恭喜幸運得主</div><h2 id="playerWinnerName"></h2><p id="playerWinnerTeam"></p></div>
+</section>
+<p class="small" style="text-align:center;margin:28px 0">活動提示：建議主持人先讓全員加入，再按開始。抽獎採伺服器隨機抽出目前房間玩家；正式發獎前請由主辦方核對身分與活動規則。</p>
+</main>
+<script>
+const socket = io();
+const $ = id => document.getElementById(id);
+let role = null, roomState = null, me = null, answeredThisQuestion = false;
+function show(id, yes=true){$(id).classList.toggle("hidden",!yes)}
+function msg(id, text, cls=""){ $(id).textContent=text; $(id).className=cls; }
+function renderTeams(teams, target) {
+  $(target).innerHTML = "";
+  (teams || []).forEach((t,i) => {
+    const el=document.createElement("div"); el.className="team";
+    const max=Math.max(1,...(teams||[]).map(x=>x.score));
+    el.innerHTML=`<span class="pill">#${i+1}</span><strong>${escapeHtml(t.name)}</strong><span class="muted">${t.members} 人 · ${t.score} 分</span><div class="bar"><i style="width:${Math.round(t.score/max*100)}%"></i></div>`;
+    $(target).appendChild(el);
+  });
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function renderQuestion(q, idx, targetText, targetAnswers, isHost) {
+  if(!q) return;
+  $(targetText).textContent=q.q;
+  const holder=$(targetAnswers); holder.innerHTML="";
+  q.options.forEach((opt,i)=>{
+    const b=document.createElement("button"); b.className="answer"; b.textContent=["🅰️ ","🅱️ ","🅲 ","🅳 "][i]+opt;
+    if(isHost){b.disabled=true;} else {
+      b.onclick=()=>{
+        if(answeredThisQuestion) return;
+        answeredThisQuestion=true;
+        holder.querySelectorAll("button").forEach(x=>x.disabled=true);
+        socket.emit("player:answer",{choice:i},res=>{
+          show("answerFeedback",true);
+          if(res?.ok) msg("answerFeedback",res.correct?`🎉 答對！本題 +${res.earned} 分，替隊伍加分！`:"哎呀，答錯了！下一題再追回來。",res.correct?"notice success":"notice");
+          else msg("answerFeedback",res?.error||"送出失敗，請稍後再試。","notice error");
+        });
+      };
+    }
+    holder.appendChild(b);
+  });
+}
+$("create").onclick=()=>socket.emit("host:create",{},res=>{if(!res?.ok)return msg("createError","建立失敗，請重新操作。","error");role="host";show("mode",false);show("host",true);$("hostCode").textContent=res.code;});
+$("join").onclick=()=>{msg("joinError","");socket.emit("player:join",{code:$("roomCode").value.trim(),name:$("playerName").value.trim()},res=>{if(!res?.ok)return msg("joinError",res?.error||"加入失敗。","error");role="player";me=res.player;show("mode",false);show("player",true);$("myName").textContent=me.name;$("myTeam").textContent=me.team;});};
+$("start").onclick=()=>socket.emit("host:start",{},res=>{if(!res?.ok)alert(res?.error||"無法開始");});
+$("next").onclick=()=>socket.emit("host:next",{},res=>{if(!res?.ok)alert(res?.error||"無法切換題目");});
+$("draw").onclick=()=>{if(confirm("確定從目前已加入的玩家中抽出一位幸運得主？"))socket.emit("host:draw",{},res=>{if(!res?.ok)alert(res?.error||"抽獎失敗");});};
+$("resetDraw").onclick=()=>socket.emit("host:resetDraw",{},()=>{});
+$("fullscreen").onclick=()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.();};
+socket.on("answerCount",data=>{if(role==="host"){$("answered").textContent=data.answered;$("totalPlayers").textContent=data.total;}});
+socket.on("state",s=>{
+  roomState=s;
+  renderTeams(s.teams,"teamBoard");renderTeams(s.teams,"playerTeamBoard");
+  if(role==="host"){
+    $("playerCount").textContent=s.participants.length;
+    $("phaseText").textContent=({lobby:"等待加入",question:"答題中",results:"已結算"})[s.phase]||s.phase;
+    $("hostMessage").textContent=s.message;
+    $("playerList").innerHTML="";
+    s.participants.forEach(p=>{const c=document.createElement("span");c.className="playerchip";c.textContent=(p.connected?"🟢 ":"⚪ ")+p.name+" · "+p.team;$("playerList").appendChild(c);});
+    if(s.phase==="question"){show("hostQuestion",true);show("next",true);$("questionNo").textContent=`第 ${s.questionIndex+1} 題 / 5`;renderQuestion(s.question,s.questionIndex,"questionText","hostAnswers",true);}
+    else {show("hostQuestion",false);show("next",false);}
+    if(s.phase==="results"){$("hostMessage").textContent=`比賽結束！冠軍隊伍：${s.winner||"—"}`;}
+    if(s.drawWinner){show("winnerBox",true);$("winnerName").textContent="🎉 "+s.drawWinner.name;$("winnerTeam").textContent=s.drawWinner.team+" · 請上台領獎";}
+    else show("winnerBox",false);
+  } else if(role==="player" && me){
+    const p=s.participants.find(x=>x.id===me.id);
+    if(p){$("myScore").textContent=p.score;$("myTeam").textContent=p.team;}
+    $("playerMessage").textContent=s.message;
+    if(s.phase==="question"){
+      show("playerQuestion",true);
+      if(!window.currentQ || window.currentQ!==s.questionIndex){window.currentQ=s.questionIndex;answeredThisQuestion=false;show("answerFeedback",false);renderQuestion(s.question,s.questionIndex,"playerQuestionText","playerAnswers",false);}
+    }else show("playerQuestion",false);
+    if(s.drawWinner){show("playerWinner",true);$("playerWinnerName").textContent=s.drawWinner.name;$("playerWinnerTeam").textContent=s.drawWinner.team;}
+    else show("playerWinner",false);
+  }
+});
+</script></body></html>
