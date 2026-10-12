@@ -17,7 +17,10 @@ const QUESTIONS = [
   { q: "公司團隊合作的最佳狀態是？", options: ["互相支援", "一起解決問題", "一起領獎", "全部都對"], answer: 3, points: 100 },
   { q: "尾牙抽獎前最合理的儀式是？", options: ["握緊手機", "默念幸運數字", "先跟宇宙溝通", "全部都做"], answer: 3, points: 100 },
   { q: "如果同事說「我只想安靜吃飯」，代表？", options: ["真的想安靜", "正在觀察獎品", "還沒抽到大獎", "以上都有可能"], answer: 3, points: 100 }
-];
+  { q: "七里香誰唱的？", options: ["周杰倫", "周傳雄", "周華健", "以上皆是"], answer: 3, points: 100 },
+  { q: "七里香誰唱的？", options: ["周杰倫", "周傳雄", "周華健", "以上皆是"], answer: 3, points: 100 },
+  ];
+
 
 function makeCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
